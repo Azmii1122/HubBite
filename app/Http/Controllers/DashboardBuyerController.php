@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Http\Controllers\Web;
+namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Merchant;
 use App\Models\Product;
 use Illuminate\Http\Request;
 
-class DashboardController extends Controller
+class DashboardBuyerController extends Controller
 {
     public function index(Request $request)
     {
