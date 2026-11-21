@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Response;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-class OrderController extends Controller
+class OrderSellerController extends Controller
 {
     /**
      * Display a listing of orders with rich filters and statistics.
