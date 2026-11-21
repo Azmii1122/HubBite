@@ -4,39 +4,66 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OrderItem extends Model
 {
     use HasFactory;
 
     protected $table = 'order_items';
-    protected $primaryKey = 'item_id';
-    public $timestamps = false;
 
+    /**
+     * @var list<string>
+     */
     protected $fillable = [
         'order_id',
-        'product_id',
+        'menu_id',
+        'menu_name',
+        'price',
         'quantity',
+        'subtotal',
         'notes',
     ];
 
-    public function getProductNameAttribute()
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
     {
-        return $this->product ? $this->product->name : 'Menu HubBite';
+        return [
+            'price' => 'decimal:2',
+            'quantity' => 'integer',
+            'subtotal' => 'decimal:2',
+        ];
     }
 
-    public function getSubtotalAttribute()
+    public function order(): BelongsTo
     {
-        return $this->product ? ($this->product->price * $this->quantity) : 0;
+        return $this->belongsTo(Order::class, 'order_id', 'id');
     }
 
-    public function order()
+    public function menu(): BelongsTo
     {
-        return $this->belongsTo(Order::class, 'order_id', 'order_id');
+        return $this->belongsTo(Menu::class, 'menu_id', 'id')->withTrashed();
     }
 
-    public function product()
+    public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class, 'product_id', 'product_id');
+        return $this->belongsTo(Product::class, 'menu_id', 'id')->withTrashed();
+    }
+
+    public function getProductNameAttribute(): string
+    {
+        return $this->menu_name ?? ($this->menu?->name ?? 'Menu HubBite');
+    }
+
+    public function getFormattedPriceAttribute(): string
+    {
+        return 'Rp '.number_format((float) $this->price, 0, ',', '.');
+    }
+
+    public function getFormattedSubtotalAttribute(): string
+    {
+        return 'Rp '.number_format((float) $this->subtotal, 0, ',', '.');
     }
 }

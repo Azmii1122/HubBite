@@ -12,81 +12,76 @@ class Menu extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected $table = 'menus';
+
     /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
+     * @var list<string>
      */
     protected $fillable = [
         'store_id',
         'category_id',
         'name',
+        'slug',
         'description',
         'price',
+        'discount_price',
         'image',
         'stock',
         'availability_status',
+        'is_bestseller',
+        'is_popular_campus',
     ];
 
     /**
-     * The attributes that should be cast.
-     *
      * @return array<string, string>
      */
     protected function casts(): array
     {
         return [
             'price' => 'decimal:2',
+            'discount_price' => 'decimal:2',
             'stock' => 'integer',
             'availability_status' => 'boolean',
+            'is_bestseller' => 'boolean',
+            'is_popular_campus' => 'boolean',
         ];
     }
 
-    /**
-     * Get the store that owns the menu.
-     *
-     * @return BelongsTo
-     */
     public function store(): BelongsTo
     {
-        return $this->belongsTo(Store::class);
+        return $this->belongsTo(Store::class, 'store_id', 'id');
     }
 
-    /**
-     * Get the category that owns the menu.
-     *
-     * @return BelongsTo
-     */
+    public function merchant(): BelongsTo
+    {
+        return $this->belongsTo(Merchant::class, 'store_id', 'id');
+    }
+
     public function category(): BelongsTo
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(Category::class, 'category_id', 'id');
     }
 
-    /**
-     * Get the order items associated with the menu.
-     *
-     * @return HasMany
-     */
     public function orderItems(): HasMany
     {
-        return $this->hasMany(OrderItem::class);
+        return $this->hasMany(OrderItem::class, 'menu_id', 'id');
     }
 
-    /**
-     * Format the price in Indonesian Rupiah.
-     *
-     * @return string
-     */
+    public function cartItems(): HasMany
+    {
+        return $this->hasMany(CartItem::class, 'menu_id', 'id');
+    }
+
+    public function getIsAvailableAttribute(): bool
+    {
+        return (bool) $this->availability_status;
+    }
+
     public function getFormattedPriceAttribute(): string
     {
-        return 'Rp ' . number_format($this->price, 0, ',', '.');
+        return 'Rp '.number_format((float) $this->price, 0, ',', '.');
     }
 
-    /**
-     * Get image URL with fallback to placeholder image.
-     *
-     * @return string
-     */
     public function getImageUrlAttribute(): string
     {
         if ($this->image && file_exists(public_path($this->image))) {
@@ -97,7 +92,35 @@ class Menu extends Model
             return $this->image;
         }
 
-        return 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&auto=format&fit=crop&q=80';
+        $placeholders = [
+            'https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=600&q=80',
+            'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80',
+            'https://images.unsplash.com/photo-1612927601601-6638404737ce?auto=format&fit=crop&w=600&q=80',
+            'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=600&q=80',
+            'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=600&q=80',
+        ];
+
+        return $placeholders[($this->id ?? 1) % count($placeholders)];
+    }
+
+    public function getImageAttribute(?string $value): string
+    {
+        if ($value && file_exists(public_path($value))) {
+            return asset($value);
+        }
+
+        if ($value && str_starts_with($value, 'http')) {
+            return $value;
+        }
+
+        $placeholders = [
+            'https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=600&q=80',
+            'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80',
+            'https://images.unsplash.com/photo-1612927601601-6638404737ce?auto=format&fit=crop&w=600&q=80',
+            'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=600&q=80',
+            'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=600&q=80',
+        ];
+
+        return $placeholders[($this->id ?? 1) % count($placeholders)];
     }
 }
-

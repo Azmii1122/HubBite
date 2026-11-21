@@ -1,14 +1,26 @@
 <?php
 
-use App\Http\Controllers\DashboardBuyerController;
 use App\Http\Controllers\ProfileController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', [DashboardBuyerController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', function () {
+    $user = Auth::user();
+
+    if ($user?->isAdmin()) {
+        return redirect()->route('admin.users.index');
+    }
+
+    if ($user?->isMerchant()) {
+        return redirect()->route('seller.dashboard');
+    }
+
+    return redirect()->route('customer.dashboard');
+})->middleware(['auth'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -17,3 +29,6 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+require __DIR__.'/admin.php';
+require __DIR__.'/seller.php';
+require __DIR__.'/customer.php';

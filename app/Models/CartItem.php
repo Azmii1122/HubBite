@@ -4,31 +4,46 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CartItem extends Model
 {
     use HasFactory;
 
     protected $table = 'cart_items';
-    protected $primaryKey = 'cart_id';
-    public $timestamps = false;
 
+    /**
+     * @var list<string>
+     */
     protected $fillable = [
-        'buyer_id',
-        'buyer_email',
-        'product_id',
+        'user_id',
+        'menu_id',
         'quantity',
         'notes',
     ];
 
-    public function buyer()
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
     {
-        return $this->belongsTo(User::class, 'buyer_id', 'user_id');
+        return [
+            'quantity' => 'integer',
+        ];
     }
 
-    public function product()
+    public function buyer(): BelongsTo
     {
-        return $this->belongsTo(Product::class, 'product_id', 'product_id');
+        return $this->belongsTo(User::class, 'user_id', 'user_id');
+    }
+
+    public function menu(): BelongsTo
+    {
+        return $this->belongsTo(Menu::class, 'menu_id', 'id');
+    }
+
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class, 'menu_id', 'id');
     }
 }
-
